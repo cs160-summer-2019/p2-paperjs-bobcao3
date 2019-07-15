@@ -35,11 +35,23 @@
 		    margin-right: auto;
 		    display: block;
 		}
+    
+    #HP {
+      padding-left: 0;
+		    padding-right: 0;
+		    margin-left: auto;
+		    margin-right: auto;
+		    display: block;
+    }
 	</style>
 
 	<script type="text/javascript" canvas="canvas">
+    
 		window.onload = function() {
 			var canvas = document.getElementById('myCanvas');
+      var HP = 100;
+      var combo = 0;
+      var max_combo = 0;
 
 			// coloring page
 			var mandala = {
@@ -75,11 +87,62 @@
 				var tool = new paper.Tool();
 
 				tool.onMouseDown = function (event) {
-				    var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
-				    if (hit) {
+				    var hit = mandala.item.hitTest(event.point, { tolerance: -10, fill: true });
+				    if (hit && hit.item.clickable == true) {
 				        hit.item.fillColor = cp.history[cp.history.length - 1];
-				    }
+              if (hit.item.hitted == true) {
+                HP -= 2;
+              } else {
+                hit.item.hitted = true;
+                HP += combo;
+                combo += 1;
+                if (max_combo < combo) max_combo = combo
+              }
+				    } else {
+              HP -= 7;
+              combo = 0;
+            }
 				}
+        
+        tool.onMouseMove = function(event) {
+
+        }
+        
+        // Here is the beat point
+        var strokePoints = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000]
+        var startTime = performance.now();
+        
+        var strokeInterval = 100 * 1000 / 90; // 90 BPM --> 60s in a min * 1000ms in a sec / 90 beats per min
+        
+        var strokeIndex = 0;
+        
+          console.log(mandala.item.children)
+        setInterval(function(){
+          var elapsedTime = performance.now() - startTime;
+//           if (elapsedTime > strokePoints[strokeIndex]) { // Comment out this line and uncomment next line for constant intervals
+        if (elapsedTime > strokeIndex * strokeInterval) {
+            console.log("Beat point ", strokeIndex)
+            strokeIndex += 1;
+            mandala.item.children[strokeIndex].clickable = true;
+            mandala.item.children[strokeIndex].hitted = false;
+            mandala.item.children[strokeIndex - 1].clickable = false;
+            mandala.item.children[strokeIndex + 1].strokeColor = new paper.Color(0.5, 0.5, 0.5)
+            mandala.item.children[strokeIndex].strokeColor = new paper.Color(0, 0, 0)
+            mandala.item.children[strokeIndex - 1].strokeColor = new paper.Color(1, 1, 1)
+            if (strokeIndex - 1 >= 0 && strokeIndex - 1 < strokePoints.length) {
+              if (mandala.item.children[strokeIndex - 1].hitted == false) {
+                HP -= 15;
+                combo = 0;
+              } 
+            }
+            $("#HP").html("HP: " + HP)
+            $("#COMBO").html("Combo: " + combo + ", Max Combo: " + max_combo)
+            if (HP < 0) {
+              alert("Oops! Game Over")
+            }
+          }
+          console.log(HP)
+        }, 5);
 			}
 
 
@@ -116,6 +179,7 @@
 
 				paper.project.importSVG(mandala.filePath, function(item) { 
 					mandala.item = item._children["design-freepik"];
+          mandala.item.strokeColor = new paper.Color(1, 1, 1);
 				    paper.project.insertLayer(0,mandala.item);
 
 				    if (custom) {
@@ -124,7 +188,7 @@
 				    	myGradientInteraction();
 				    }		
 					
-				}); 
+				});
 			}
 
 			// To see your myGradientInteraction version visit: 
@@ -141,8 +205,18 @@
 	</script>
 </head>
 <body>	
-
+<!--   <embed src="/static/coloring/music/sunflower.mp3" autostart="true" loop="true"> -->
 	<canvas id="myCanvas" width="750px" height="750px"></canvas>
 	<div id="color-palette"></div>
+  <div>
+    <h2 id="HP">
+  <p>
+    dgmdfgfdg
+      </p>
+    </h2>
+    <h3 id="COMBO">
+
+    </h3>
+  </div>
 </body>
 </html>
